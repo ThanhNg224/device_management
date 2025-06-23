@@ -174,14 +174,32 @@ export function DeviceTable({ devices }: DeviceTableProps) {
                       <div className="flex items-center gap-2">
                         <Badge
                           variant="outline"
-                          className="text-xs font-semibold border-2 border-blue-300 bg-blue-50 text-blue-700"
+                          className={`
+                            text-xs font-semibold border-2
+                            ${
+                              device.lastPerformance.temp > 80
+                                ? "border-red-300 bg-red-50 text-red-700"
+                                : device.lastPerformance.temp > 60
+                                  ? "border-orange-300 bg-orange-50 text-orange-700"
+                                  : "border-blue-300 bg-blue-50 text-blue-700"
+                            }
+                          `}
                         >
-                          72°C
+                          {device.lastPerformance.temp}°C
                         </Badge>
                         <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
                           <div
-                            className="h-full transition-all duration-300 rounded-full bg-gradient-to-r from-blue-400 to-blue-600"
-                            style={{ width: "72%" }}
+                            className={`
+                              h-full transition-all duration-300 rounded-full
+                              ${
+                                device.lastPerformance.temp > 80
+                                  ? "bg-gradient-to-r from-red-400 to-red-600"
+                                  : device.lastPerformance.temp > 60
+                                    ? "bg-gradient-to-r from-orange-400 to-orange-600"
+                                    : "bg-gradient-to-r from-blue-400 to-blue-600"
+                              }
+                            `}
+                            style={{ width: `${Math.min(device.lastPerformance.temp, 100)}%` }}
                           />
                         </div>
                       </div>
