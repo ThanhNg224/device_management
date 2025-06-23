@@ -8,14 +8,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { Device } from "../types"
 import { DeviceDetailsModal } from "./DeviceDetailsModal"
+import { DeviceEditModal } from "./DeviceEditModal"
 
 interface DeviceTableProps {
   devices: Device[]
+  onUpdateDevice: (device: Device) => void
 }
 
-export function DeviceTable({ devices }: DeviceTableProps) {
+export function DeviceTable({ devices, onUpdateDevice }: DeviceTableProps) {
   const [selectedDevice, setSelectedDevice] = React.useState<Device | null>(null)
   const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false)
 
   const handleViewDetails = (device: Device) => {
     setSelectedDevice(device)
@@ -28,9 +31,19 @@ export function DeviceTable({ devices }: DeviceTableProps) {
   }
 
   const handleEditDevice = (device: Device) => {
-    // Handle edit functionality here
-    console.log("Edit device:", device)
-    handleCloseModal()
+    setSelectedDevice(device)
+    setIsEditModalOpen(true)
+    setIsModalOpen(false) // Close details modal if open
+  }
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false)
+    setSelectedDevice(null)
+  }
+
+  const handleSaveDevice = (updatedDevice: Device) => {
+    onUpdateDevice(updatedDevice)
+    console.log("Device updated:", updatedDevice)
   }
 
   return (
@@ -220,6 +233,7 @@ export function DeviceTable({ devices }: DeviceTableProps) {
                           size="sm"
                           className="h-8 w-8 p-0 hover:bg-orange-100 hover:text-orange-700 transition-colors"
                           title="Edit Configuration"
+                          onClick={() => handleEditDevice(device)}
                         >
                           <Settings className="h-4 w-4" />
                         </Button>
@@ -245,6 +259,12 @@ export function DeviceTable({ devices }: DeviceTableProps) {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onEdit={handleEditDevice}
+      />
+      <DeviceEditModal
+        device={selectedDevice}
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        onSave={handleSaveDevice}
       />
     </div>
   )

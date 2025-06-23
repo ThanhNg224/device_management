@@ -153,31 +153,39 @@ export function DeviceDetailsModal({ device, isOpen, onClose, onEdit }: DeviceDe
                   {device.autoReboot ? "Enabled" : "Disabled"}
                 </Badge>
               </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-muted-foreground">Sound</label>
-                <Badge
-                  variant={device.soundEnabled ? "default" : "secondary"}
-                  className={
-                    device.soundEnabled
-                      ? "bg-green-100 text-green-800 border-green-300"
-                      : "bg-gray-100 text-gray-800 border-gray-300"
-                  }
-                >
-                  {device.soundEnabled ? "Enabled" : "Disabled"}
-                </Badge>
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-muted-foreground">Volume</label>
+                <div className="flex items-center gap-4">
+                  <Badge
+                    variant="outline"
+                    className="text-sm font-semibold border-2 border-blue-300 bg-blue-50 text-blue-700 min-w-[60px] justify-center"
+                  >
+                    {device.config?.volume || 0}%
+                  </Badge>
+                  <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full transition-all duration-300 rounded-full bg-gradient-to-r from-blue-400 to-blue-600"
+                      style={{ width: `${device.config?.volume || 0}%` }}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-muted-foreground">LED</label>
-                <Badge
-                  variant={device.ledEnabled ? "default" : "secondary"}
-                  className={
-                    device.ledEnabled
-                      ? "bg-green-100 text-green-800 border-green-300"
-                      : "bg-gray-100 text-gray-800 border-gray-300"
-                  }
-                >
-                  {device.ledEnabled ? "Enabled" : "Disabled"}
-                </Badge>
+              <div className="space-y-3">
+                <label className="text-sm font-medium text-muted-foreground">Brightness</label>
+                <div className="flex items-center gap-4">
+                  <Badge
+                    variant="outline"
+                    className="text-sm font-semibold border-2 border-yellow-300 bg-yellow-50 text-yellow-700 min-w-[60px] justify-center"
+                  >
+                    {device.config?.brightness || 0}%
+                  </Badge>
+                  <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full transition-all duration-300 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-600"
+                      style={{ width: `${device.config?.brightness || 0}%` }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 export interface Device {
   deviceCode: string
-  status: "Online" | "Offline"
+  status: "Online" | "Offline" | 0 | 1  // Allow both string and numeric status
   lastConnected: string
   location: string
   version: string
@@ -22,8 +22,10 @@ export interface Device {
   language: string
   area: string
   autoReboot: boolean
-  soundEnabled: boolean
-  ledEnabled: boolean
+  config: {
+    volume: number
+    brightness: number
+  }
 }
 
 export interface DeviceLog {

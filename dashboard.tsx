@@ -18,6 +18,15 @@ export default function Component() {
   const [loading, setLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
 
+  // Add function to update a device
+  const updateDevice = React.useCallback((updatedDevice: Device) => {
+    setDevices(prevDevices => 
+      prevDevices.map(device => 
+        device.deviceCode === updatedDevice.deviceCode ? updatedDevice : device
+      )
+    )
+  }, [])
+
   React.useEffect(() => {
     const loadData = async () => {
       try {
@@ -84,7 +93,7 @@ export default function Component() {
             </div>
           ) : (
             <>
-              {activeTab === "devices" && <DeviceTable devices={devices} />}
+              {activeTab === "devices" && <DeviceTable devices={devices} onUpdateDevice={updateDevice} />}
               {activeTab === "logs" && <DeviceLogsTable logs={mockLogs} />}
             </>
           )}

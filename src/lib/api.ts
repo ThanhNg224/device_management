@@ -14,17 +14,45 @@ export async function fetchDevices() {
 
     const data = await response.json()
     
+    let devices = []
     // Ensure we return an array
     if (Array.isArray(data)) {
-      return data
+      devices = data
     } else if (data && Array.isArray(data.devices)) {
-      return data.devices
+      devices = data.devices
     } else if (data && Array.isArray(data.data)) {
-      return data.data
+      devices = data.data
     } else {
       console.warn("API response is not in expected format:", data)
       throw new Error("Invalid data format from API")
     }
+
+    // Transform backend data to match frontend interface
+    const transformedDevices = devices.map((device: any) => ({
+      ...device,
+      // Convert numeric status to string
+      status: device.status === 1 ? "Online" : "Offline",
+      // Fix CPU usage - multiply by 10 to get correct percentage
+      lastPerformance: {
+        ...device.lastPerformance,
+        cpu: Math.round((device.lastPerformance?.cpu || 0) * 100) / 100, // Multiply by 100 and round to 2 decimal places
+      },
+      // Provide default values for missing fields
+      unitCompany: device.unitCompany || "N/A",
+      deviceName: device.deviceName || device.deviceCode,
+      description: device.description || "No description available",
+      imei: device.imei || "N/A",
+      serverAddress: device.serverAddress || "N/A",
+      macAddress: device.macAddress || "N/A",
+      temperatureThreshold: device.temperatureThreshold || 0,
+      faceThreshold: device.faceThreshold || 0,
+      distance: device.distance || 0,
+      language: device.language || "N/A",
+      area: device.area || "N/A",
+      autoReboot: device.autoReboot || false,
+    }))
+
+    return transformedDevices
   } catch (error) {
     console.error("Failed to fetch devices:", error)
     
