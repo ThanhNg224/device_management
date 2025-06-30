@@ -30,8 +30,16 @@ export function DeviceEditModal({ device, isOpen, onClose, onSave }: DeviceEditM
   if (!device || !editedDevice) return null
 
   const handleSave = () => {
-    onSave(editedDevice)
-    onClose()
+    try {
+      onSave(editedDevice)
+      onClose()
+      // You can add a success toast here if you have a toast library
+      console.log("Device configuration saved successfully")
+    } catch (error) {
+      console.error("Failed to save device configuration:", error)
+      // You can add an error toast here if you have a toast library
+      alert("Failed to save device configuration")
+    }
   }
 
   const handleInputChange = (field: string, value: any) => {

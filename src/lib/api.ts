@@ -61,3 +61,58 @@ export async function fetchDevices() {
     return mockDevices
   }
 }
+
+export async function uploadApk(file: File): Promise<{ apkUrl: string }> {
+  try {
+    const formData = new FormData()
+    formData.append('apk', file)
+
+    const response = await fetch("/api/upload-apk", {
+      method: "POST",
+      body: formData,
+      signal: AbortSignal.timeout(30000), // 30 second timeout for file upload
+    })
+
+    if (!response.ok) {
+      throw new Error(`Upload failed! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    
+    if (!data.apkUrl) {
+      throw new Error("Invalid response: missing apkUrl")
+    }
+
+    return data
+  } catch (error) {
+    console.error("Failed to upload APK:", error)
+    throw error
+  }
+}
+
+export async function sendUpdate(deviceCode: string, apkUrl: string): Promise<void> {
+  try {
+    const response = await fetch("/api/send-update", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        devices: [deviceCode],
+        apkUrl: apkUrl,
+        packageName: "com.atin.arcface"
+      }),
+      signal: AbortSignal.timeout(15000), // 15 second timeout
+    })
+
+    if (!response.ok) {
+      throw new Error(`Update request failed! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    console.log("Update sent successfully:", data)
+  } catch (error) {
+    console.error("Failed to send update:", error)
+    throw error
+  }
+}

@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import type { Device } from "../types"
 import { DeviceDetailsModal } from "./DeviceDetailsModal"
 import { DeviceEditModal } from "./DeviceEditModal"
+import { uploadApk, sendUpdate } from "../lib/api"
 
 interface DeviceTableProps {
   devices: Device[]
@@ -19,6 +20,7 @@ export function DeviceTable({ devices, onUpdateDevice }: DeviceTableProps) {
   const [selectedDevice, setSelectedDevice] = React.useState<Device | null>(null)
   const [isModalOpen, setIsModalOpen] = React.useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false)
+  const [isUpdating, setIsUpdating] = React.useState<string | null>(null) // Track which device is updating
 
   const handleViewDetails = (device: Device) => {
     setSelectedDevice(device)
@@ -44,6 +46,65 @@ export function DeviceTable({ devices, onUpdateDevice }: DeviceTableProps) {
   const handleSaveDevice = (updatedDevice: Device) => {
     onUpdateDevice(updatedDevice)
     console.log("Device updated:", updatedDevice)
+  }
+
+  const handleUpdateDevice = async (device: Device) => {
+    // Check if device is online
+    if (device.status !== "Online") {
+      // Show toast notification - you can replace this with your preferred toast library
+      alert("Device is offline. Cannot perform update.")
+      return
+    }
+
+    // Create file input element
+    const fileInput = document.createElement('input')
+    fileInput.type = 'file'
+    fileInput.accept = '.apk'
+    fileInput.style.display = 'none'
+
+    fileInput.onchange = async (event) => {
+      const target = event.target as HTMLInputElement
+      const file = target.files?.[0]
+      
+      if (!file) {
+        return
+      }
+
+      // Validate file type
+      if (!file.name.toLowerCase().endsWith('.apk')) {
+        alert("Please select a valid APK file.")
+        return
+      }
+
+      setIsUpdating(device.deviceCode)
+
+      try {
+        // Upload APK file
+        console.log("Uploading APK file:", file.name)
+        const { apkUrl } = await uploadApk(file)
+        console.log("APK uploaded successfully, URL:", apkUrl)
+
+        // Send update request
+        console.log("Sending update request to device:", device.deviceCode)
+        await sendUpdate(device.deviceCode, apkUrl)
+        
+        // Show success message
+        alert(`Update sent successfully to device ${device.deviceCode}`)
+        
+      } catch (error) {
+        console.error("Update failed:", error)
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred"
+        alert(`Update failed: ${errorMessage}`)
+      } finally {
+        setIsUpdating(null)
+        // Clean up file input
+        document.body.removeChild(fileInput)
+      }
+    }
+
+    // Add to DOM and trigger click
+    document.body.appendChild(fileInput)
+    fileInput.click()
   }
 
   return (
@@ -130,7 +191,7 @@ export function DeviceTable({ devices, onUpdateDevice }: DeviceTableProps) {
                             }
                           `}
                         >
-                          {device.lastPerformance.cpu}%
+                          {device.lastPerformance.cpu.toFixed(2)}%
                         </Badge>
                         <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
                           <div
@@ -164,7 +225,7 @@ export function DeviceTable({ devices, onUpdateDevice }: DeviceTableProps) {
                             }
                           `}
                         >
-                          {device.lastPerformance.ram}%
+                          {device.lastPerformance.ram.toFixed(2)}%
                         </Badge>
                         <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
                           <div
@@ -198,7 +259,7 @@ export function DeviceTable({ devices, onUpdateDevice }: DeviceTableProps) {
                             }
                           `}
                         >
-                          {device.lastPerformance.temp}°C
+                          {device.lastPerformance.temp.toFixed(2)}°C
                         </Badge>
                         <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
                           <div
@@ -242,8 +303,14 @@ export function DeviceTable({ devices, onUpdateDevice }: DeviceTableProps) {
                           size="sm"
                           className="h-8 w-8 p-0 hover:bg-green-100 hover:text-green-700 transition-colors"
                           title="Update Version"
+                          onClick={() => handleUpdateDevice(device)}
+                          disabled={isUpdating === device.deviceCode}
                         >
-                          <Download className="h-4 w-4" />
+                          {isUpdating === device.deviceCode ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                          ) : (
+                            <Download className="h-4 w-4" />
+                          )}
                         </Button>
                       </div>
                     </TableCell>
