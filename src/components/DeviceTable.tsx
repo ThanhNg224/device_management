@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import type { Device } from "../types"
 import { DeviceDetailsModal } from "./DeviceDetailsModal"
 import { DeviceEditModal } from "./DeviceEditModal"
-import { uploadApk, sendUpdate } from "../lib/api"
+import { uploadApk } from "../lib/api"
 
 interface DeviceTableProps {
   devices: Device[]
@@ -79,14 +79,10 @@ export function DeviceTable({ devices, onUpdateDevice }: DeviceTableProps) {
       setIsUpdating(device.deviceCode)
 
       try {
-        // Upload APK file
-        console.log("Uploading APK file:", file.name)
-        const { apkUrl } = await uploadApk(file)
-        console.log("APK uploaded successfully, URL:", apkUrl)
-
-        // Send update request
-        console.log("Sending update request to device:", device.deviceCode)
-        await sendUpdate(device.deviceCode, apkUrl)
+        // Upload APK file and send update to device (backend handles both)
+        console.log("Uploading APK file and sending update to device:", file.name)
+        const { apkUrl } = await uploadApk(file, device.deviceCode)
+        console.log("APK uploaded and update sent successfully, URL:", apkUrl)
         
         // Show success message
         alert(`Update sent successfully to device ${device.deviceCode}`)
@@ -336,3 +332,4 @@ export function DeviceTable({ devices, onUpdateDevice }: DeviceTableProps) {
     </div>
   )
 }
+
