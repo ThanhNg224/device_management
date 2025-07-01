@@ -10,17 +10,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { DeviceLog } from "../types"
+import { fetchDeviceLogs } from "../lib/api"
 
-interface DeviceLogsTableProps {
-  logs: DeviceLog[]
-}
-
-export function DeviceLogsTable({ logs }: DeviceLogsTableProps) {
+export function DeviceLogsTable() {
+  const [logs, setLogs] = React.useState<DeviceLog[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [error, setError] = React.useState<string | null>(null)
   const [currentPage, setCurrentPage] = React.useState(1)
-  const [filteredLogs, setFilteredLogs] = React.useState(logs)
+  const [filteredLogs, setFilteredLogs] = React.useState<DeviceLog[]>([])
   const [filters, setFilters] = React.useState({
     deviceCode: "all",
-    eventType: "all",
+    accessType: "all",
     fromDate: "",
     toDate: "",
     searchTerm: ""
@@ -33,9 +33,26 @@ export function DeviceLogsTable({ logs }: DeviceLogsTableProps) {
   const currentLogs = filteredLogs.slice(startIndex, endIndex)
 
   const uniqueDeviceCodes = [...new Set(logs.map((log) => log.deviceCode))]
-  const uniqueEventTypes = [...new Set(logs.map((log) => log.eventType))]
 
-  // Apply filters whenever filters change
+  // Fetch logs on component mount
+  React.useEffect(() => {
+    const loadLogs = async () => {
+      try {
+        setError(null)
+        const fetchedLogs = await fetchDeviceLogs()
+        setLogs(fetchedLogs)
+      } catch (err) {
+        console.error("Error loading logs:", err)
+        setError("Failed to load logs from server. Using local data.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadLogs()
+  }, [])
+
+  // Apply filters whenever filters or logs change
   React.useEffect(() => {
     let filtered = logs
 
@@ -44,9 +61,9 @@ export function DeviceLogsTable({ logs }: DeviceLogsTableProps) {
       filtered = filtered.filter(log => log.deviceCode === filters.deviceCode)
     }
 
-    // Filter by event type
-    if (filters.eventType !== "all") {
-      filtered = filtered.filter(log => log.eventType === filters.eventType)
+    // Filter by access type
+    if (filters.accessType !== "all") {
+      filtered = filtered.filter(log => log.accessType === filters.accessType)
     }
 
     // Filter by date range
@@ -64,12 +81,12 @@ export function DeviceLogsTable({ logs }: DeviceLogsTableProps) {
       })
     }
 
-    // Filter by search term (searches in device code, person ID, and note)
+    // Filter by search term (searches in device code, full name, and note)
     if (filters.searchTerm) {
       const searchLower = filters.searchTerm.toLowerCase()
       filtered = filtered.filter(log => 
         log.deviceCode.toLowerCase().includes(searchLower) ||
-        log.personId.toLowerCase().includes(searchLower) ||
+        log.fullName.toLowerCase().includes(searchLower) ||
         log.note.toLowerCase().includes(searchLower) ||
         log.result.toLowerCase().includes(searchLower)
       )
@@ -91,7 +108,7 @@ export function DeviceLogsTable({ logs }: DeviceLogsTableProps) {
   const clearFilters = () => {
     setFilters({
       deviceCode: "all",
-      eventType: "all",
+      accessType: "all",
       fromDate: "",
       toDate: "",
       searchTerm: ""
@@ -99,16 +116,40 @@ export function DeviceLogsTable({ logs }: DeviceLogsTableProps) {
   }
 
   const hasActiveFilters = filters.deviceCode !== "all" || 
-                          filters.eventType !== "all" || 
+                          filters.accessType !== "all" || 
                           filters.fromDate || 
                           filters.toDate || 
                           filters.searchTerm
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Device Logs</h1>
+          <p className="text-muted-foreground">View and analyze device activity logs</p>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+            <p className="text-muted-foreground">Loading logs...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Device Logs</h1>
-        <p className="text-muted-foreground">View and analyze device activity logs</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Device Logs</h1>
+          <p className="text-muted-foreground">View and analyze device activity logs</p>
+          {error && (
+            <p className="text-sm text-orange-600 bg-orange-100 px-2 py-1 rounded mt-2 inline-block">
+              {error}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -119,7 +160,7 @@ export function DeviceLogsTable({ logs }: DeviceLogsTableProps) {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Search by device code, person ID, result, or note..."
+                placeholder="Search by device code, full name, result, or note..."
                 value={filters.searchTerm}
                 onChange={(e) => handleFilterChange("searchTerm", e.target.value)}
                 className="pl-10 pr-4"
@@ -145,18 +186,15 @@ export function DeviceLogsTable({ logs }: DeviceLogsTableProps) {
                 </Select>
               </div>
               <div className="flex-1 min-w-[200px]">
-                <label className="text-sm font-medium mb-2 block">Event Type</label>
-                <Select value={filters.eventType} onValueChange={(value) => handleFilterChange("eventType", value)}>
+                <label className="text-sm font-medium mb-2 block">Status</label>
+                <Select value={filters.accessType} onValueChange={(value) => handleFilterChange("accessType", value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="All Events" />
+                    <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Events</SelectItem>
-                    {uniqueEventTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="0">Valid</SelectItem>
+                    <SelectItem value="1">Invalid</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -214,8 +252,8 @@ export function DeviceLogsTable({ logs }: DeviceLogsTableProps) {
               <TableHeader>
                 <TableRow className="bg-gray-100 hover:bg-gray-100">
                   <TableHead className="font-bold text-foreground py-3">Device Code</TableHead>
-                  <TableHead className="font-bold text-foreground">Event Type</TableHead>
-                  <TableHead className="font-bold text-foreground">Person ID</TableHead>
+                  <TableHead className="font-bold text-foreground">Status</TableHead>
+                  <TableHead className="font-bold text-foreground">Full Name</TableHead>
                   <TableHead className="font-bold text-foreground">Time</TableHead>
                   <TableHead className="font-bold text-foreground">Result</TableHead>
                   <TableHead className="font-bold text-foreground">Similarity</TableHead>
@@ -226,7 +264,7 @@ export function DeviceLogsTable({ logs }: DeviceLogsTableProps) {
                 {currentLogs.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No logs found matching your search criteria
+                      {logs.length === 0 ? "No logs available" : "No logs found matching your search criteria"}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -240,11 +278,21 @@ export function DeviceLogsTable({ logs }: DeviceLogsTableProps) {
                     >
                       <TableCell className="font-semibold py-2">{log.deviceCode}</TableCell>
                       <TableCell className="py-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {log.eventType}
+                        <Badge
+                          className={`
+                            text-xs font-semibold
+                            ${
+                              log.accessType === "0"
+                                ? "bg-green-100 text-green-800 border-green-300 hover:bg-green-200"
+                                : "bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200"
+                            }
+                          `}
+                          variant="outline"
+                        >
+                          {log.accessType === "0" ? "Valid" : "Invalid"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-mono text-sm py-2">{log.personId}</TableCell>
+                      <TableCell className="font-medium py-2">{log.fullName}</TableCell>
                       <TableCell className="text-sm text-muted-foreground font-mono py-2">{log.time}</TableCell>
                       <TableCell className="py-2">
                         <Badge

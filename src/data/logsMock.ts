@@ -3,8 +3,8 @@ import type { DeviceLog } from "../types"
 export const mockLogs: DeviceLog[] = [
   {
     deviceCode: "DEV-001",
-    eventType: "Face Recognition",
-    personId: "P-12345",
+    fullName: "John Smith",
+    accessType: "0",
     time: "2024-01-20 14:25:30",
     result: "Success",
     similarity: "95.2%",
@@ -12,8 +12,8 @@ export const mockLogs: DeviceLog[] = [
   },
   {
     deviceCode: "DEV-002",
-    eventType: "System Alert",
-    personId: "-",
+    fullName: "Unknown",
+    accessType: "1",
     time: "2024-01-20 13:45:22",
     result: "Warning",
     similarity: "-",
@@ -21,8 +21,8 @@ export const mockLogs: DeviceLog[] = [
   },
   {
     deviceCode: "DEV-001",
-    eventType: "Face Recognition",
-    personId: "P-67890",
+    fullName: "Jane Doe",
+    accessType: "1",
     time: "2024-01-20 12:15:45",
     result: "Failed",
     similarity: "67.8%",
@@ -30,8 +30,8 @@ export const mockLogs: DeviceLog[] = [
   },
   {
     deviceCode: "DEV-003",
-    eventType: "Device Boot",
-    personId: "-",
+    fullName: "Unknown",
+    accessType: "0",
     time: "2024-01-20 08:00:12",
     result: "Success",
     similarity: "-",
@@ -39,8 +39,8 @@ export const mockLogs: DeviceLog[] = [
   },
   {
     deviceCode: "DEV-004",
-    eventType: "Face Recognition",
-    personId: "P-11111",
+    fullName: "Michael Johnson",
+    accessType: "0",
     time: "2024-01-20 11:30:18",
     result: "Success",
     similarity: "98.7%",
@@ -48,8 +48,8 @@ export const mockLogs: DeviceLog[] = [
   },
   {
     deviceCode: "DEV-001",
-    eventType: "Maintenance",
-    personId: "ADMIN-001",
+    fullName: "Admin User",
+    accessType: "0",
     time: "2024-01-19 18:00:00",
     result: "Completed",
     similarity: "-",

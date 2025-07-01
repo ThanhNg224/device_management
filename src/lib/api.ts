@@ -98,7 +98,7 @@ export async function sendUpdate(deviceCode: string, apkUrl: string): Promise<vo
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        devices: [deviceCode],
+        devices: [{ serial: deviceCode }],
         apkUrl: apkUrl,
         packageName: "com.atin.arcface"
       }),
@@ -114,5 +114,47 @@ export async function sendUpdate(deviceCode: string, apkUrl: string): Promise<vo
   } catch (error) {
     console.error("Failed to send update:", error)
     throw error
+  }
+}
+
+export async function fetchDeviceLogs() {
+  try {
+    const response = await fetch("http://192.168.1.157:3000/api/deviceLog/getListDeviceLog", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      signal: AbortSignal.timeout(10000), // 10 second timeout
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    
+    // Ensure we return an array
+    const logs = Array.isArray(data) ? data : []
+    
+    // Transform and sort the logs
+    const transformedLogs = logs
+      .map((log: any) => ({
+        deviceCode: log.serial || "Unknown", // Use serial field as Device Code
+        fullName: log.fullName || "Unknown",
+        accessType: log.accessType || "0",
+        time: log.accessTime || "N/A",
+        result: log.errorMessage || "Unknown",
+        similarity: log.scoreMatch ? `${(log.scoreMatch * 100).toFixed(2)}%` : "N/A",
+        note: log.errorMessage || "No additional information"
+      }))
+      .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()) // Sort by time descending
+
+    return transformedLogs
+  } catch (error) {
+    console.error("Failed to fetch device logs:", error)
+    
+    // Return mock data as fallback
+    const { mockLogs } = await import("../data/logsMock")
+    return mockLogs
   }
 }

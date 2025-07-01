@@ -30,8 +30,8 @@ export interface Device {
 
 export interface DeviceLog {
   deviceCode: string
-  eventType: string
-  personId: string
+  fullName: string
+  accessType: string
   time: string
   result: string
   similarity: string

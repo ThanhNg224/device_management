@@ -94,7 +94,7 @@ export default function Component() {
           ) : (
             <>
               {activeTab === "devices" && <DeviceTable devices={devices} onUpdateDevice={updateDevice} />}
-              {activeTab === "logs" && <DeviceLogsTable logs={mockLogs} />}
+              {activeTab === "logs" && <DeviceLogsTable />}
             </>
           )}
         </main>
