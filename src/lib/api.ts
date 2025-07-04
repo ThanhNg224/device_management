@@ -79,7 +79,7 @@ export async function uploadApk(file: File, deviceSerial: string): Promise<{ apk
     }
 
     const result = await response.json()
-    const apkUrl = result.data?.apkUrl
+    const apkUrl = result.apkUrl
     
     if (!apkUrl) {
       throw new Error("Invalid response: missing apkUrl")
@@ -127,7 +127,7 @@ export async function fetchDeviceLogs() {
     return transformedLogs
   } catch (error) {
     console.error("Failed to fetch device logs:", error)
-    
+
     // Return mock data as fallback
     const { mockLogs } = await import("../data/logsMock")
     return mockLogs
